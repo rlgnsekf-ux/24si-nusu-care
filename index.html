@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#10243a">
+<title>24시 누수케어 업무관리</title>
+<style>
+:root{--navy:#10243a;--blue:#1d5b89;--bg:#f3f6f9;--line:#dce4eb;--muted:#667789;--white:#fff;--green:#16835d;--red:#bd4545}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#172635;font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif}
+header{background:var(--navy);color:#fff;padding:20px max(18px,calc((100% - 1120px)/2));display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+header h1{font-size:20px;margin:0}header small{color:#c7d5e2}
+main{max-width:1120px;margin:auto;padding:18px}.tabs{display:flex;gap:8px;overflow:auto;margin-bottom:16px}
+button,.tab{border:0;border-radius:10px;padding:11px 14px;font-weight:650;cursor:pointer;background:#e5edf4;color:#18344d}
+button.primary,.tab.active{background:var(--blue);color:white}button.danger{background:#fff0f0;color:var(--red)}button.ghost{background:#edf2f6}
+.panel{display:none}.panel.active{display:block}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.card,.section{background:white;border:1px solid var(--line);border-radius:14px;padding:16px}
+.metric{font-size:25px;font-weight:800;margin-top:5px}.muted{color:var(--muted);font-size:13px}
+.layout{display:grid;grid-template-columns: minmax(260px, .85fr) minmax(0,1.5fr);gap:14px}
+h2{font-size:17px;margin:0 0 14px}h3{font-size:15px;margin:0 0 10px}
+label{display:block;font-size:13px;font-weight:650;margin:10px 0 5px}
+input,select,textarea{width:100%;border:1px solid #cbd6df;border-radius:9px;padding:10px;font:inherit;background:white;color:#172635}
+textarea{min-height:72px;resize:vertical}.form-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.list{display:flex;flex-direction:column;gap:8px}.item{border:1px solid var(--line);border-radius:11px;padding:12px;display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.item strong{display:block}.item p{margin:4px 0;color:var(--muted);font-size:13px;white-space:pre-wrap}
+.item-actions{display:flex;gap:6px;flex-wrap:wrap}.item-actions button{padding:7px 9px;font-size:12px}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-size:12px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}.toolbar input{max-width:260px}
+.empty{padding:24px;text-align:center;color:var(--muted);border:1px dashed #cbd6df;border-radius:10px}
+.note{background:#fff8e8;border:1px solid #f0dfb8;padding:12px;border-radius:10px;color:#70551d;font-size:13px;margin:14px 0}
+footer{max-width:1120px;margin:auto;padding:0 18px 24px;color:var(--muted);font-size:12px}
+@media(max-width:760px){.cards{grid-template-columns:repeat(2,1fr)}.layout{grid-template-columns:1fr}main{padding:12px}.card,.section{padding:13px}header{padding:16px}.item{flex-direction:column}.item-actions{width:100%}}
+@media(max-width:380px){.cards{grid-template-columns:1fr 1fr}.metric{font-size:21px}}
+</style>
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#0759c7">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+</head>
+<body>
+<header><div><h1>24시 누수케어 업무관리</h1><small>고객 · 작업일지 · 매출 관리</small></div><div class="muted" style="color:#c7d5e2">개인용 로컬 저장 버전</div></header>
+<main>
+  <div class="tabs">
+    <button class="tab active" data-tab="home">대시보드</button>
+    <button class="tab" data-tab="customers">고객관리</button>
+    <button class="tab" data-tab="jobs">작업일지</button>
+    <button class="tab" data-tab="sales">매출관리</button>
+    <button class="tab" data-tab="backup">백업·설정</button>
+  </div>
+  <section id="home" class="panel active">
+    <div class="cards">
+      <div class="card"><div class="muted">등록 고객</div><div class="metric" id="mCustomers">0명</div></div>
+      <div class="card"><div class="muted">누적 작업</div><div class="metric" id="mJobs">0건</div></div>
+      <div class="card"><div class="muted">이번 달 매출</div><div class="metric" id="mRevenue">0원</div></div>
+      <div class="card"><div class="muted">미수금</div><div class="metric" id="mUnpaid">0원</div></div>
+    </div>
+    <div class="section"><h2>최근 작업</h2><div id="recentJobs" class="list"></div></div>
+    <div class="note">처음 실행하면 이 브라우저에 데이터가 저장됩니다. 실제 현장 자료를 입력하기 전에 백업 메뉴에서 사용법을 확인하세요.</div>
+  </section>
+
+  <section id="customers" class="panel">
+    <div class="layout">
+      <div class="section"><h2 id="customerFormTitle">고객 등록</h2>
+        <form id="customerForm">
+          <input type="hidden" id="customerId">
+          <label>고객명 *</label><input id="cName" required placeholder="예: 홍길동">
+          <label>전화번호</label><input id="cPhone" inputmode="tel" placeholder="010-0000-0000">
+          <label>주소</label><input id="cAddress" placeholder="현장 주소">
+          <label>고객 구분</label><select id="cType"><option>일반고객</option><option>상가</option><option>관리사무소</option><option>업체</option></select>
+          <label>메모</label><textarea id="cMemo" placeholder="상담 내용, 특이사항"></textarea>
+          <div class="form-actions"><button class="primary" type="submit">저장</button><button type="button" class="ghost" onclick="resetCustomer()">초기화</button></div>
+        </form>
+      </div>
+      <div class="section"><h2>고객 목록</h2><div class="toolbar"><input id="customerSearch" placeholder="이름·전화·주소 검색"></div><div id="customerList" class="list"></div></div>
+    </div>
+  </section>
+
+  <section id="jobs" class="panel">
+    <div class="layout">
+      <div class="section"><h2 id="jobFormTitle">작업 등록</h2>
+        <form id="jobForm">
+          <input type="hidden" id="jobId">
+          <label>작업일 *</label><input id="jDate" type="date" required>
+          <label>고객 *</label><select id="jCustomer" required><option value="">고객 선택</option></select>
+          <label>작업 종류</label><select id="jType"><option>누수탐지</option><option>누수수리</option><option>배관공사</option><option>하수구·배관</option><option>기타</option></select>
+          <label>작업 상태</label><select id="jStatus"><option>접수</option><option>방문예정</option><option>작업완료</option><option>취소</option></select>
+          <label>작업 내용 및 원인</label><textarea id="jDesc" placeholder="탐지 위치, 원인, 조치 내용"></textarea>
+          <label>작업 메모</label><textarea id="jMemo" placeholder="사용 자재, 추가 방문 등"></textarea>
+          <div class="form-actions"><button class="primary" type="submit">작업 저장</button><button type="button" class="ghost" onclick="resetJob()">초기화</button></div>
+        </form>
+      </div>
+      <div class="section"><h2>작업 내역</h2><div class="toolbar"><input id="jobSearch" placeholder="고객·주소·작업 내용 검색"><select id="jobFilter"><option value="">전체 상태</option><option>접수</option><option>방문예정</option><option>작업완료</option><option>취소</option></select></div><div id="jobList" class="list"></div></div>
+    </div>
+  </section>
+
+  <section id="sales" class="panel">
+    <div class="layout">
+      <div class="section"><h2 id="saleFormTitle">매출 등록</h2>
+        <form id="saleForm">
+          <input type="hidden" id="saleId">
+          <label>거래일 *</label><input id="sDate" type="date" required>
+          <label>고객</label><select id="sCustomer"><option value="">고객 선택(선택사항)</option></select>
+          <label>연결 작업</label><select id="sJob"><option value="">작업 선택(선택사항)</option></select>
+          <label>항목</label><input id="sTitle" placeholder="예: 누수탐지 및 수리비" required>
+          <label>청구 금액(원) *</label><input id="sAmount" type="number" min="0" step="1000" required>
+          <label>수금 상태</label><select id="sPaid"><option value="paid">수금완료</option><option value="unpaid">미수금</option><option value="partial">일부수금</option></select>
+          <label>실제 수금액(원)</label><input id="sReceived" type="number" min="0" step="1000" value="0">
+          <label>지출/원가(원)</label><input id="sCost" type="number" min="0" step="1000" value="0">
+          <label>메모</label><textarea id="sMemo"></textarea>
+          <div class="form-actions"><button class="primary" type="submit">매출 저장</button><button type="button" class="ghost" onclick="resetSale()">초기화</button></div>
+        </form>
+      </div>
+      <div class="section"><h2>매출 내역</h2><div class="toolbar"><input id="saleSearch" placeholder="항목·고객 검색"><input id="monthFilter" type="month"></div><div id="salesSummary" class="muted" style="margin-bottom:12px"></div><div id="saleList" class="list"></div></div>
+    </div>
+  </section>
+
+  <section id="backup" class="panel">
+    <div class="section"><h2>데이터 백업 및 복원</h2>
+      <p>이 버전은 서버에 전송하지 않고 현재 브라우저의 저장공간에 기록합니다. 스마트폰과 PC는 저장공간이 서로 다르므로 자동 동기화되지 않습니다.</p>
+      <div class="form-actions"><button class="primary" id="exportBtn">전체 데이터 백업(JSON)</button><label style="margin:0"><span class="muted">백업 파일 복원</span><input type="file" id="importFile" accept="application/json"></label><button class="danger" id="clearBtn">전체 데이터 삭제</button></div>
+      <div class="note">중요: 브라우저 데이터 삭제, 시크릿 모드 사용, 기기 변경 시 기록이 사라질 수 있습니다. 정기적으로 JSON 백업 파일을 별도 보관하세요. 개인정보 보호를 위해 공용 PC에서는 사용하지 마세요.</div>
+      <h3>현재 저장 상태</h3><div id="storageInfo" class="muted"></div>
+    </div>
+  </section>
+</main>
+<footer>24시 누수케어 업무관리 · 초기 버전 · 금액은 원 단위로 입력합니다.</footer>
+<script>
+const KEY='leakcare_local_v1';
+let db=load();
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||{customers:[],jobs:[],sales:[]}}catch(e){return{customers:[],jobs:[],sales:[]}}}
+function save(){localStorage.setItem(KEY,JSON.stringify(db));renderAll()}
+function id(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function won(n){return (Number(n)||0).toLocaleString('ko-KR')+'원'}
+function today(){return new Date().toISOString().slice(0,10)}
+function customerName(cid){return db.customers.find(c=>c.id===cid)?.name||'고객 미지정'}
+function switchTab(t){document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===t));document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===t));renderAll()}
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
+function resetCustomer(){customerForm.reset();customerId.value='';customerFormTitle.textContent='고객 등록'}
+function resetJob(){jobForm.reset();jobId.value='';jDate.value=today();jobFormTitle.textContent='작업 등록'}
+function resetSale(){saleForm.reset();saleId.value='';sDate.value=today();sReceived.value=0;sCost.value=0;saleFormTitle.textContent='매출 등록'}
+customerForm.onsubmit=e=>{e.preventDefault();let obj={id:customerId.value||id(),name:cName.value.trim(),phone:cPhone.value.trim(),address:cAddress.value.trim(),type:cType.value,memo:cMemo.value.trim(),updated:new Date().toISOString()};if(!obj.name)return;let i=db.customers.findIndex(x=>x.id===obj.id);if(i>=0)db.customers[i]=obj;else db.customers.unshift(obj);save();resetCustomer()};
+jobForm.onsubmit=e=>{e.preventDefault();let obj={id:jobId.value||id(),date:jDate.value,cid:jCustomer.value,type:jType.value,status:jStatus.value,desc:jDesc.value.trim(),memo:jMemo.value.trim()};let i=db.jobs.findIndex(x=>x.id===obj.id);if(i>=0)db.jobs[i]=obj;else db.jobs.unshift(obj);save();resetJob()};
+saleForm.onsubmit=e=>{e.preventDefault();let obj={id:saleId.value||id(),date:sDate.value,cid:sCustomer.value,jid:sJob.value,title:sTitle.value.trim(),amount:Number(sAmount.value),paid:sPaid.value,received:Number(sReceived.value)||0,cost:Number(sCost.value)||0,memo:sMemo.value.trim()};if(obj.paid==='paid'&&obj.received===0)obj.received=obj.amount;let i=db.sales.findIndex(x=>x.id===obj.id);if(i>=0)db.sales[i]=obj;else db.sales.unshift(obj);save();resetSale()};
+function editCustomer(cid){let c=db.customers.find(x=>x.id===cid);if(!c)return;customerId.value=c.id;cName.value=c.name;cPhone.value=c.phone;cAddress.value=c.address;cType.value=c.type;cMemo.value=c.memo;customerFormTitle.textContent='고객 수정';switchTab('customers');window.scrollTo(0,0)}
+function delCustomer(cid){if(!confirm('고객 정보를 삭제할까요? 관련 작업·매출 기록은 남습니다.'))return;db.customers=db.customers.filter(x=>x.id!==cid);save()}
+function editJob(jid){let j=db.jobs.find(x=>x.id===jid);if(!j)return;jobId.value=j.id;jDate.value=j.date;jCustomer.value=j.cid;jType.value=j.type;jStatus.value=j.status;jDesc.value=j.desc;jMemo.value=j.memo;jobFormTitle.textContent='작업 수정';switchTab('jobs');window.scrollTo(0,0)}
+function delJob(jid){if(!confirm('작업 기록을 삭제할까요?'))return;db.jobs=db.jobs.filter(x=>x.id!==jid);save()}
+function editSale(sid){let s=db.sales.find(x=>x.id===sid);if(!s)return;saleId.value=s.id;sDate.value=s.date;sCustomer.value=s.cid;sJob.value=s.jid;sTitle.value=s.title;sAmount.value=s.amount;sPaid.value=s.paid;sReceived.value=s.received;sCost.value=s.cost;sMemo.value=s.memo;saleFormTitle.textContent='매출 수정';switchTab('sales');window.scrollTo(0,0)}
+function delSale(sid){if(!confirm('매출 기록을 삭제할까요?'))return;db.sales=db.sales.filter(x=>x.id!==sid);save()}
+function renderSelects(){let c='<option value="">고객 선택</option>'+db.customers.map(x=>`<option value="${esc(x.id)}">${esc(x.name)}${x.phone?' · '+esc(x.phone):''}</option>`).join('');jCustomer.innerHTML=c;sCustomer.innerHTML='<option value="">고객 선택(선택사항)</option>'+db.customers.map(x=>`<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('');sJob.innerHTML='<option value="">작업 선택(선택사항)</option>'+db.jobs.map(x=>`<option value="${esc(x.id)}">${esc(x.date)} · ${esc(customerName(x.cid))} · ${esc(x.type)}</option>`).join('')}
+function renderCustomers(){let q=customerSearch.value.toLowerCase();let a=db.customers.filter(c=>(c.name+' '+c.phone+' '+c.address).toLowerCase().includes(q));customerList.innerHTML=a.length?a.map(c=>`<div class="item"><div><strong>${esc(c.name)} <span class="muted">· ${esc(c.type)}</span></strong><p>${esc(c.phone)}<br>${esc(c.address)}<br>${esc(c.memo)}</p></div><div class="item-actions"><button onclick="editCustomer('${c.id}')">수정</button><button class="danger" onclick="delCustomer('${c.id}')">삭제</button></div></div>`).join(''):'<div class="empty">등록된 고객이 없습니다.</div>'}
+function jobCard(j){return `<div class="item"><div><strong>${esc(j.date)} · ${esc(customerName(j.cid))}</strong><p>${esc(j.type)} · ${esc(j.status)}<br>${esc(j.desc)}${j.memo?'<br>메모: '+esc(j.memo):''}</p></div><div class="item-actions"><button onclick="editJob('${j.id}')">수정</button><button class="danger" onclick="delJob('${j.id}')">삭제</button></div></div>`}
+function renderJobs(){let q=jobSearch.value.toLowerCase(),f=jobFilter.value;let a=db.jobs.filter(j=>(!f||j.status===f)&&(customerName(j.cid)+' '+j.type+' '+j.desc+' '+j.date).toLowerCase().includes(q)).sort((a,b)=>b.date.localeCompare(a.date));jobList.innerHTML=a.length?a.map(jobCard).join(''):'<div class="empty">등록된 작업이 없습니다.</div>'}
+function renderSales(){let q=saleSearch.value.toLowerCase(),m=monthFilter.value;let a=db.sales.filter(s=>(!m||s.date.startsWith(m))&&(s.title+' '+customerName(s.cid)).toLowerCase().includes(q)).sort((a,b)=>b.date.localeCompare(a.date));let billed=a.reduce((n,s)=>n+s.amount,0),received=a.reduce((n,s)=>n+s.received,0),cost=a.reduce((n,s)=>n+s.cost,0);salesSummary.textContent=`조회 청구액 ${won(billed)} · 수금 ${won(received)} · 미수 ${won(Math.max(0,billed-received))} · 지출 ${won(cost)} · 수금기준 차액 ${won(received-cost)}`;saleList.innerHTML=a.length?a.map(s=>`<div class="item"><div><strong>${esc(s.date)} · ${esc(s.title)}</strong><p>${esc(customerName(s.cid))} · 청구 ${won(s.amount)}<br>수금 ${won(s.received)} · 지출 ${won(s.cost)} · ${s.received>=s.amount?'수금완료':'미수/일부수금'}${s.memo?'<br>'+esc(s.memo):''}</p></div><div class="item-actions"><button onclick="editSale('${s.id}')">수정</button><button class="danger" onclick="delSale('${s.id}')">삭제</button></div></div>`).join(''):'<div class="empty">매출 내역이 없습니다.</div>'}
+function renderHome(){mCustomers.textContent=db.customers.length+'명';mJobs.textContent=db.jobs.length+'건';let month=today().slice(0,7),s=db.sales.filter(x=>x.date.startsWith(month));mRevenue.textContent=won(s.reduce((n,x)=>n+x.received,0));mUnpaid.textContent=won(s.reduce((n,x)=>n+Math.max(0,x.amount-x.received),0));let a=[...db.jobs].sort((x,y)=>y.date.localeCompare(x.date)).slice(0,5);recentJobs.innerHTML=a.length?a.map(jobCard).join(''):'<div class="empty">아직 등록된 작업이 없습니다.</div>'}
+function renderAll(){renderSelects();renderCustomers();renderJobs();renderSales();renderHome();storageInfo.textContent=`고객 ${db.customers.length}명 · 작업 ${db.jobs.length}건 · 매출 ${db.sales.length}건 · 마지막 저장: ${new Date().toLocaleString('ko-KR')}`}
+[customerSearch,jobSearch,jobFilter,saleSearch,monthFilter].forEach(x=>x.addEventListener('input',renderAll));
+exportBtn.onclick=()=>{let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='24시누수케어_업무백업_'+today()+'.json';a.click();URL.revokeObjectURL(a.href)};
+importFile.onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let d=JSON.parse(await f.text());if(!Array.isArray(d.customers)||!Array.isArray(d.jobs)||!Array.isArray(d.sales))throw Error();if(confirm('현재 데이터를 백업 파일 내용으로 교체할까요?')){db=d;save();alert('복원했습니다.')} }catch(err){alert('올바른 백업 파일이 아닙니다.')}e.target.value=''};
+clearBtn.onclick=()=>{if(confirm('모든 고객·작업·매출 데이터를 영구 삭제할까요? 백업 후 진행하세요.')&&confirm('정말 삭제하시겠습니까?')){db={customers:[],jobs:[],sales:[]};save()}};
+jDate.value=today();sDate.value=today();renderAll();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js').catch(()=>{}));
+}
+</script>
+</body></html>

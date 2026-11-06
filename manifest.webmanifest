@@ -1,0 +1,27 @@
+{
+  "id": "./",
+  "name": "24시누수케어",
+  "short_name": "24시누수케어",
+  "description": "고객관리, 작업일지, 매출관리 업무 앱",
+  "lang": "ko-KR",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#073b8c",
+  "theme_color": "#0759c7",
+  "icons": [
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
