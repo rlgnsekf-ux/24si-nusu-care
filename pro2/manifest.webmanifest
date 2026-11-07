@@ -1,0 +1,16 @@
+{
+  "id": "/24si-nusu-care/pro2/",
+  "name": "24시누수케어 PRO 2.0",
+  "short_name": "누수케어 PRO",
+  "description": "개인용 고객·작업·일정·매출 관리 앱",
+  "lang": "ko-KR",
+  "start_url": "/24si-nusu-care/pro2/",
+  "scope": "/24si-nusu-care/pro2/",
+  "display": "standalone",
+  "background_color": "#f3f6f9",
+  "theme_color": "#10243a",
+  "icons": [
+    {"src":"./icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},
+    {"src":"./icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"}
+  ]
+}
